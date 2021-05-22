@@ -27,7 +27,7 @@ class RFID_Writer():
         sector = data_position["sector_data"]
         block = data_position["block_data"]["id"]
         if not self.rdr.card_auth(self.rdr.auth_a, sector*4+block, self.key_a, uid):
-            self.rdr.write(sector*4+block, id[:16]])
+            self.rdr.write(sector*4+block, id[:16])
 
         self.rdr.cleanup()
         self.util.deauth()
@@ -99,7 +99,7 @@ class RFID_Reader():
         self.util = self.rdr.util()
         #  self.util.debug = True
 
-    def read_id(self,id):
+    def read_id(self):
         self.rdr.wait_for_tag()
         (error, data) = self.rdr.request()
 
@@ -113,12 +113,14 @@ class RFID_Reader():
         sector = data_position["sector_data"]
         block = data_position["block_data"]["id"]
         if not self.rdr.card_auth(self.rdr.auth_a, sector*4+block, self.key_a, uid):
-            _, res_data = self.rdr.read(sector*4+block, id[:16]])
+            _, res_data = self.rdr.read(sector*4+block)
 
         self.rdr.cleanup()
         self.util.deauth()
 
-    def read_name(self,name):
+        return res_data
+
+    def read_name(self):
         self.rdr.wait_for_tag()
         (error, data) = self.rdr.request()
 
@@ -132,12 +134,14 @@ class RFID_Reader():
         sector = data_position["sector_data"]
         block = data_position["block_data"]["name"]
         if not self.rdr.card_auth(self.rdr.auth_a, sector*4+block, self.key_a, uid):
-            self.rdr.read(sector*4+block, name.encode()[:16])
+            _, res_data = self.rdr.read(sector*4+block)
 
         self.rdr.cleanup()
         self.util.deauth()
 
-    def read_surname(self,surname):
+        return res_data
+
+    def read_surname(self):
         self.rdr.wait_for_tag()
         (error, data) = self.rdr.request()
 
@@ -151,12 +155,14 @@ class RFID_Reader():
         sector = data_position["sector_data"]
         block = data_position["block_data"]["surname"]
         if not self.rdr.card_auth(self.rdr.auth_a, sector*4+block, self.key_a, uid):
-            self.rdr.read(sector*4+block, surname.encode()[:16])
+            _, res_data = self.rdr.read(sector*4+block)
 
         self.rdr.cleanup()
         self.util.deauth()
 
-    def read_all(self,id,name,surname):
+        return res_data
+
+    def read_all(self):
         self.rdr.wait_for_tag()
         (error, data) = self.rdr.request()
 
@@ -168,11 +174,23 @@ class RFID_Reader():
 
         global data_position
         sector = data_position["sector_data"]
-        block_data = {data_position["block_data"]["id"]:id,data_position["block_data"]["name"]:name.encode(),data_position["block_data"]["surname"]:surname.encode()}
+        block_data = {
+            data_position["block_data"]["id"]:id,
+            data_position["block_data"]["name"]:name.encode(),
+            data_position["block_data"]["surname"]:surname.encode()
+        }
+        res_data_tot = []
         for block, data in block_data.items():
             if not self.rdr.card_auth(self.rdr.auth_a, sector*4+block, self.key_a, uid):
-                self.rdr.write(sector*4+block, data[:16])
+                _, res_data = self.rdr.write(sector*4+block, data[:16])
+                res_data_tot.append(res_data)
 
         self.rdr.cleanup()
         self.util.deauth()
 
+        return res_data_tot
+
+def data_to_str(data):
+    while 0x00 in data:
+        data.remove(0x00)
+    return data.decode()
