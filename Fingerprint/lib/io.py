@@ -77,10 +77,11 @@ except Exception as e:
 while True:
     print("What will you do?")
     print("0) Exit")
-    print("1) Add finger")
-    print("2) Remove finger")
-    print("3) Clear finger memory")
-    print("4) Info")
+    print("1) Info")
+    print("2) Add finger")
+    print("3) Remove finger")
+    print("4) Clear finger memory")
+    
 
     chose = input("Inserire scelta...\n")
     chose = int(chose)
@@ -88,10 +89,10 @@ while True:
     if (chose == 0):
         exit(0)
     elif (chose == 1):
-        add_finger(f)
-    elif (chose == 2):
-        remove_finger(f)
-    elif (chose == 3):
-        clear_finger(f)
-    elif (chose == 4):
         info(f)
+    elif (chose == 2):
+        add_finger(f)
+    elif (chose == 3):
+        remove_finger(f)
+    elif (chose == 4):
+        clear_finger(f)
