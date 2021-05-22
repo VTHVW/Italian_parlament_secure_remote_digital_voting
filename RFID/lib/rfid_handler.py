@@ -109,6 +109,7 @@ class RFID_Reader():
                 global data_position
                 sector = data_position["sector_data"]
                 block = data_position["block_data"]["id"]
+                res_data = None
                 if not self.rdr.card_auth(self.rdr.auth_a, sector*4+block, self.key_a, uid):
                     _, res_data = self.rdr.read(sector*4+block)
 
@@ -134,6 +135,7 @@ class RFID_Reader():
         global data_position
         sector = data_position["sector_data"]
         block = data_position["block_data"]["name"]
+        res_data = None
         if not self.rdr.card_auth(self.rdr.auth_a, sector*4+block, self.key_a, uid):
             _, res_data = self.rdr.read(sector*4+block)
 
@@ -155,6 +157,7 @@ class RFID_Reader():
         global data_position
         sector = data_position["sector_data"]
         block = data_position["block_data"]["surname"]
+        res_data = None
         if not self.rdr.card_auth(self.rdr.auth_a, sector*4+block, self.key_a, uid):
             _, res_data = self.rdr.read(sector*4+block)
 
@@ -180,6 +183,7 @@ class RFID_Reader():
             data_position["block_data"]["name"]:name.encode(),
             data_position["block_data"]["surname"]:surname.encode()
         }
+        res_data = None
         res_data_tot = []
         for block, data in block_data.items():
             if not self.rdr.card_auth(self.rdr.auth_a, sector*4+block, self.key_a, uid):
