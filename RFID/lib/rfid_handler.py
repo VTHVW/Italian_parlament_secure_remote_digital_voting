@@ -103,22 +103,23 @@ class RFID_Reader():
         self.rdr.wait_for_tag()
         (error, data) = self.rdr.request()
 
-        if error:
+        if not error:
+            (error, uid) = self.rdr.anticoll()
+            if not error:
+                global data_position
+                sector = data_position["sector_data"]
+                block = data_position["block_data"]["id"]
+                if not self.rdr.card_auth(self.rdr.auth_a, sector*4+block, self.key_a, uid):
+                    _, res_data = self.rdr.read(sector*4+block)
+
+                self.rdr.cleanup()
+                self.util.deauth()
+
+                return res_data
+            else:
+                raise Exception("Error in anti collision algorithm")
+        else:
             raise Exception("Error detecting the tag")
-        (error, uid) = self.rdr.anticoll()
-        if error:
-            raise Exception("Error in anti collision algorithm")
-
-        global data_position
-        sector = data_position["sector_data"]
-        block = data_position["block_data"]["id"]
-        if not self.rdr.card_auth(self.rdr.auth_a, sector*4+block, self.key_a, uid):
-            _, res_data = self.rdr.read(sector*4+block)
-
-        self.rdr.cleanup()
-        self.util.deauth()
-
-        return res_data
 
     def read_name(self):
         self.rdr.wait_for_tag()
