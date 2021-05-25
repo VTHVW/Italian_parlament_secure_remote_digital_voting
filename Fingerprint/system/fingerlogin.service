@@ -1,5 +1,5 @@
 [Unit]
-Description=TUI display manager
+Description=Fingerprint login service
 After=systemd-user-sessions.service plymouth-quit-wait.service
 After=getty@tty1.service
 
