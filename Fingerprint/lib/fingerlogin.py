@@ -1,10 +1,9 @@
 #!/usr/bin/python3
 
-import time
 import os
 from pyfingerprint.pyfingerprint import PyFingerprint
 
-## Tries to initialize the sensor
+#Tries to initialize the sensor
 try:
     f = PyFingerprint('/dev/ttyS0', 57600, 0xFFFFFFFF, 0x00000000)
     if ( f.verifyPassword() == False ):
@@ -15,13 +14,15 @@ except Exception as e:
     print('Exception message: ' + str(e))
     exit(1)
 
+#Find rows and colums number (for a nicest print...)
 rows, columns = os.popen('stty size', 'r').read().split()
 
 while(True):
     try:
-        ## Wait that finger is read
-        state = 10
+        #Wait for the finger
+        state = 1
         while ( f.readImage() == False ):
+            #Print a str in the centre of display
             if (state != 0):
                 state = 0
                 os.system('clear')
@@ -38,13 +39,13 @@ while(True):
                 print("Appoggiare il dito sul sensore...")
             pass
 
-        ## Converts read image to characteristics and stores it in charbuffer 1
+        #Converts read image to characteristics and stores it in charbuffer 1
         f.convertImage(0x01)
 
-        ## Searchs template
+        #Searchs template
         result = f.searchTemplate()
-
         if (result[0] == -1 ):
+            #Print a str in the centre of display
             if (state != 1):
                 state = 1
                 os.system('clear')
@@ -61,9 +62,9 @@ while(True):
                 print('Impronta non trovata')
             pass
         else:
-            #funzione di login
             os.system('clear')
 
+            #Another centred print
             cont = 0
             while cont < (int(rows)/2):
                 print()
@@ -74,6 +75,8 @@ while(True):
                 cont = cont + 1
 
             print("Impronta trovata, login...")
+
+            #Login
             os.system('login -f -p pi')
             #os.system('startx')
             #os.system('systemctl start lightdm')
