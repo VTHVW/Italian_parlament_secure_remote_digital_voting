@@ -114,6 +114,7 @@ class RFID_Reader():
                     _, res_data = self.rdr.read(sector*4+block)
 
                 self.rdr.cleanup()
+                self.rdr.stop_crypto()
                 self.util.deauth()
 
                 return res_data
@@ -140,6 +141,7 @@ class RFID_Reader():
             _, res_data = self.rdr.read(sector*4+block)
 
         self.rdr.cleanup()
+        self.rdr.stop_crypto()
         self.util.deauth()
 
         return res_data
@@ -162,6 +164,7 @@ class RFID_Reader():
             _, res_data = self.rdr.read(sector*4+block)
 
         self.rdr.cleanup()
+        self.rdr.stop_crypto()
         self.util.deauth()
 
         return res_data
@@ -178,19 +181,20 @@ class RFID_Reader():
 
         global data_position
         sector = data_position["sector_data"]
-        block_data = {
-            data_position["block_data"]["id"]:id,
-            data_position["block_data"]["name"]:name.encode(),
-            data_position["block_data"]["surname"]:surname.encode()
-        }
+        block_data = [
+            data_position["block_data"]["id"],
+            data_position["block_data"]["name"],
+            data_position["block_data"]["surname"]
+        ]
         res_data = None
         res_data_tot = []
         for block, data in block_data.items():
             if not self.rdr.card_auth(self.rdr.auth_a, sector*4+block, self.key_a, uid):
-                _, res_data = self.rdr.write(sector*4+block, data[:16])
+                _, res_data = self.rdr.read(sector*4+block, data[:16])
                 res_data_tot.append(res_data)
 
         self.rdr.cleanup()
+        self.rdr.stop_crypto()
         self.util.deauth()
 
         return res_data_tot
