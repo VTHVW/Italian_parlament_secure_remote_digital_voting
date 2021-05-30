@@ -1,205 +1,224 @@
+import signal
+import time
+import sys
+
 from pirc522 import RFID
 
-data_position = {"sector_data":1,"block_data":{"id":0,"name":1,"surname":2}}
+def block_to_str(data):
+    return bytes(data).decode().replace('\x00','')
 
-class RFID_Writer():
-    def __init__(self,id,name,surname,keys=([0x01,0x02,0x03,0x04,0x05,0x06],[0x06,0x05,0x04,0x03,0x02,0x01])):
-        self.id = id
-        self.name = name
-        self.surname = surname
-        self.key_a = keys[0]
-        self.key_b = keys[1]
+class Reader():
+    def __init__(self,key_a=[0x01,0x02,0x03,0x04,0x05,0x06],key_b=[0x06, 0x05, 0x04, 0x03, 0x02, 0x01]):
         self.rdr = RFID()
         self.util = self.rdr.util()
-        #  self.util.debug = True
+        self.util.debug = True
+        signal.signal(signal.SIGINT, self.end_read)
+        self.id_block=0
+        self.name_block=1
+        self.surname_block=2
+        self.sector=1
+        self.key_a=key_a
+        self.key_b=key_b
 
-    def write_id(self,id):
-        self.rdr.wait_for_tag()
-        (error, data) = self.rdr.request()
-
-        if error:
-            raise Exception("Error detecting the tag")
-        (error, uid) = self.rdr.anticoll()
-        if error:
-            raise Exception("Error in anti collision algorithm")
-
-        global data_position
-        sector = data_position["sector_data"]
-        block = data_position["block_data"]["id"]
-        if not self.rdr.card_auth(self.rdr.auth_a, sector*4+block, self.key_a, uid):
-            self.rdr.write(sector*4+block, id[:16])
-
-        self.rdr.cleanup()
-        self.util.deauth()
-
-    def write_name(self,name):
-        self.rdr.wait_for_tag()
-        (error, data) = self.rdr.request()
-
-        if error:
-            raise Exception("Error detecting the tag")
-        (error, uid) = self.rdr.anticoll()
-        if error:
-            raise Exception("Error in anti collision algorithm")
-
-        global data_position
-        sector = data_position["sector_data"]
-        block = data_position["block_data"]["name"]
-        if not self.rdr.card_auth(self.rdr.auth_a, sector*4+block, self.key_a, uid):
-            self.rdr.write(sector*4+block, name.encode()[:16])
-
-        self.rdr.cleanup()
-        self.util.deauth()
-
-    def write_surname(self,surname):
-        self.rdr.wait_for_tag()
-        (error, data) = self.rdr.request()
-
-        if error:
-            raise Exception("Error detecting the tag")
-        (error, uid) = self.rdr.anticoll()
-        if error:
-            raise Exception("Error in anti collision algorithm")
-
-        global data_position
-        sector = data_position["sector_data"]
-        block = data_position["block_data"]["surname"]
-        if not self.rdr.card_auth(self.rdr.auth_a, sector*4+block, self.key_a, uid):
-            self.rdr.write(sector*4+block, surname.encode()[:16])
-
-        self.rdr.cleanup()
-        self.util.deauth()
-
-    def write_all(self,id,name,surname):
-        self.rdr.wait_for_tag()
-        (error, data) = self.rdr.request()
-
-        if error:
-            raise Exception("Error detecting the tag")
-        (error, uid) = self.rdr.anticoll()
-        if error:
-            raise Exception("Error in anti collision algorithm")
-
-        global data_position
-        sector = data_position["sector_data"]
-        block_data = {data_position["block_data"]["id"]:id,data_position["block_data"]["name"]:name.encode(),data_position["block_data"]["surname"]:surname.encode()}
-        for block, data in block_data.items():
-            if not self.rdr.card_auth(self.rdr.auth_a, sector*4+block, self.key_a, uid):
-                self.rdr.write(sector*4+block, data[:16])
-
-        self.rdr.cleanup()
-        self.util.deauth()
-
-
-class RFID_Reader():
-    def __init__(self,keys=([0x01,0x02,0x03,0x04,0x05,0x06],[0x06,0x05,0x04,0x03,0x02,0x01])):
-        self.key_a = keys[0]
-        self.key_b = keys[1]
-        self.rdr = RFID()
-        self.util = self.rdr.util()
-        #  self.util.debug = True
+    def end_read(self,signal=None,frame=None):
+        self.rdr.stop_crypto()
+        #  self.rdr.cleanup()
 
     def read_id(self):
+        block_data = None
         self.rdr.wait_for_tag()
-        (error, data) = self.rdr.request()
 
+        (error, data) = self.rdr.request()
         if not error:
             (error, uid) = self.rdr.anticoll()
             if not error:
-                global data_position
-                sector = data_position["sector_data"]
-                block = data_position["block_data"]["id"]
-                res_data = None
-                if not self.rdr.card_auth(self.rdr.auth_a, sector*4+block, self.key_a, uid):
-                    _, res_data = self.rdr.read(sector*4+block)
-
-                self.rdr.cleanup()
-                self.rdr.stop_crypto()
-                self.util.deauth()
-
-                return res_data
+                sector = self.sector
+                block = self.id_block
+                if not self.rdr.select_tag(uid):
+                    if not self.rdr.card_auth(self.rdr.auth_b, sector*4+block, self.key_b, uid):
+                        _ , block_data = self.rdr.read(sector*4+block)
+                    else:
+                        self.end_read()
+                        raise Exception("Impossible to auth tag")
+                else:
+                    self.end_read()
+                    raise Exception("Impossible to select tag")
+                self.end_read()
+                return block_data
             else:
-                raise Exception("Error in anti collision algorithm")
+                self.end_read()
+                raise Exception("Error during anti collision algorithm")
         else:
-            raise Exception("Error detecting the tag")
+            self.end_read()
+            raise Exception("Error during tag request")
 
     def read_name(self):
+        block_data = None
         self.rdr.wait_for_tag()
+
         (error, data) = self.rdr.request()
+        if not error:
+            (error, uid) = self.rdr.anticoll()
+            if not error:
+                sector = self.sector
+                block = self.name_block
+                if not self.rdr.select_tag(uid):
+                    if not self.rdr.card_auth(self.rdr.auth_b, sector*4+block, self.key_b, uid):
+                        _ , block_data = self.rdr.read(sector*4+block)
+                    else:
+                        self.end_read()
+                        raise Exception("Impossible to auth tag")
+                else:
+                    self.end_read()
+                    raise Exception("Impossible to select tag")
+                self.end_read()
+                return block_data
+            else:
+                self.end_read()
+                raise Exception("Error during anti collision algorithm")
+        else:
+            self.end_read()
+            raise Exception("Error during tag request")
 
-        if error:
-            raise Exception("Error detecting the tag")
-        (error, uid) = self.rdr.anticoll()
-        if error:
-            raise Exception("Error in anti collision algorithm")
-
-        global data_position
-        sector = data_position["sector_data"]
-        block = data_position["block_data"]["name"]
-        res_data = None
-        if not self.rdr.card_auth(self.rdr.auth_a, sector*4+block, self.key_a, uid):
-            _, res_data = self.rdr.read(sector*4+block)
-
-        self.rdr.cleanup()
-        self.rdr.stop_crypto()
-        self.util.deauth()
-
-        return res_data
 
     def read_surname(self):
+        block_data = None
         self.rdr.wait_for_tag()
+
         (error, data) = self.rdr.request()
-
-        if error:
-            raise Exception("Error detecting the tag")
-        (error, uid) = self.rdr.anticoll()
-        if error:
-            raise Exception("Error in anti collision algorithm")
-
-        global data_position
-        sector = data_position["sector_data"]
-        block = data_position["block_data"]["surname"]
-        res_data = None
-        if not self.rdr.card_auth(self.rdr.auth_a, sector*4+block, self.key_a, uid):
-            _, res_data = self.rdr.read(sector*4+block)
-
-        self.rdr.cleanup()
-        self.rdr.stop_crypto()
-        self.util.deauth()
-
-        return res_data
+        if not error:
+            (error, uid) = self.rdr.anticoll()
+            if not error:
+                sector = self.sector
+                block = self.surname_block
+                if not self.rdr.select_tag(uid):
+                    if not self.rdr.card_auth(self.rdr.auth_b, sector*4+block, self.key_b, uid):
+                        _ , block_data = self.rdr.read(sector*4+block)
+                    else:
+                        self.end_read()
+                        raise Exception("Impossible to auth tag")
+                else:
+                    self.end_read()
+                    raise Exception("Impossible to select tag")
+                self.end_read()
+                return block_data
+            else:
+                self.end_read()
+                raise Exception("Error during anti collision algorithm")
+        else:
+            self.end_read()
+            raise Exception("Error during tag request")
 
     def read_all(self):
-        self.rdr.wait_for_tag()
-        (error, data) = self.rdr.request()
+        return (self.read_id(),self.read_name(),self.read_surname())
 
-        if error:
-            raise Exception("Error detecting the tag")
-        (error, uid) = self.rdr.anticoll()
-        if error:
-            raise Exception("Error in anti collision algorithm")
+    def read_all_str(self):
+        return (self.read_id(),block_to_str(self.read_name()),block_to_str(self.read_surname()))
 
-        global data_position
-        sector = data_position["sector_data"]
-        block_data = [
-            data_position["block_data"]["id"],
-            data_position["block_data"]["name"],
-            data_position["block_data"]["surname"]
-        ]
-        res_data = None
-        res_data_tot = []
-        for block in block_data:
-            if not self.rdr.card_auth(self.rdr.auth_a, sector*4+block, self.key_a, uid):
-                res_data = self.rdr.read(sector*4+block)
-                res_data_tot.append(res_data)
 
-        self.rdr.cleanup()
+class Writer():
+    def __init__(self,key_a=[0x01,0x02,0x03,0x04,0x05,0x06],key_b=[0x06, 0x05, 0x04, 0x03, 0x02, 0x01]):
+        self.rdr = RFID()
+        self.util = self.rdr.util()
+        self.util.debug = True
+        signal.signal(signal.SIGINT, self.end_read)
+        self.id_block=0
+        self.name_block=1
+        self.surname_block=2
+        self.sector=1
+        self.key_a=key_a
+        self.key_b=key_b
+
+    def end_read(self,signal=None,frame=None):
         self.rdr.stop_crypto()
-        self.util.deauth()
+        #  self.rdr.cleanup()
 
-        return res_data_tot
+    def write_id(self,id):
+        self.rdr.wait_for_tag()
 
-def data_to_str(data):
-    while 0x00 in data:
-        data.remove(0x00)
-    return data.decode()
+        (error, data) = self.rdr.request()
+        if not error:
+            (error, uid) = self.rdr.anticoll()
+            if not error:
+                sector = self.sector
+                block = self.id_block
+                if not self.rdr.select_tag(uid):
+                    if not self.rdr.card_auth(self.rdr.auth_b, sector*4+block, self.key_b, uid):
+                        self.rdr.write(sector*4+block,id[:16])
+                    else:
+                        self.end_read()
+                        raise Exception("Impossible to auth tag")
+                else:
+                    self.end_read()
+                    raise Exception("Impossible to select tag")
+                self.end_read()
+            else:
+                self.end_read()
+                raise Exception("Error during anti collision algorithm")
+        else:
+            self.end_read()
+            raise Exception("Error during tag request")
+
+    def write_name(self,name):
+        self.rdr.wait_for_tag()
+
+        (error, data) = self.rdr.request()
+        if not error:
+            (error, uid) = self.rdr.anticoll()
+            if not error:
+                sector = self.sector
+                block = self.name_block
+                if not self.rdr.select_tag(uid):
+                    if not self.rdr.card_auth(self.rdr.auth_b, sector*4+block, self.key_b, uid):
+                        data= list(name.encode()[:16])
+                        while len(data)<16:
+                            data += [0x00]
+                        self.rdr.write(sector*4+block, data)
+                    else:
+                        self.end_read()
+                        raise Exception("Impossible to auth tag")
+                else:
+                    self.end_read()
+                    raise Exception("Impossible to select tag")
+                self.end_read()
+            else:
+                self.end_read()
+                raise Exception("Error during anti collision algorithm")
+        else:
+            self.end_read()
+            raise Exception("Error during tag request")
+
+
+    def write_surname(self,surname):
+        self.rdr.wait_for_tag()
+
+        (error, data) = self.rdr.request()
+        if not error:
+            (error, uid) = self.rdr.anticoll()
+            if not error:
+                sector = self.sector
+                block = self.surname_block
+                if not self.rdr.select_tag(uid):
+                    if not self.rdr.card_auth(self.rdr.auth_b, sector*4+block, self.key_b, uid):
+                        data= list(surname.encode()[:16])
+                        while len(data)<16:
+                            data += [0x00]
+                        self.rdr.write(sector*4+block, data)
+                    else:
+                        self.end_read()
+                        raise Exception("Impossible to auth tag")
+                else:
+                    self.end_read()
+                    raise Exception("Impossible to select tag")
+                self.end_read()
+            else:
+                self.end_read()
+                raise Exception("Error during anti collision algorithm")
+        else:
+            self.end_read()
+            raise Exception("Error during tag request")
+
+    def write_all(self,id,name,surname):
+        self.write_id(id)
+        self.write_name(name)
+        self.write_surname(surname)
