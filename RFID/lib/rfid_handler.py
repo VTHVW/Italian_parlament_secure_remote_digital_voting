@@ -190,7 +190,7 @@ class RFID_Reader():
         res_data_tot = []
         for block in block_data:
             if not self.rdr.card_auth(self.rdr.auth_a, sector*4+block, self.key_a, uid):
-                _, res_data = self.rdr.read(sector*4+block)
+                res_data = self.rdr.read(sector*4+block)
                 res_data_tot.append(res_data)
 
         self.rdr.cleanup()
