@@ -1,0 +1,118 @@
+*
+{
+    margin: 0;
+	padding: 0;
+	font-family: 'Oxygen';
+}
+
+@font-face {
+    font-family: 'Oxygen';
+    src: url(../font/Oxygen-Regular.ttf);
+}
+
+::-webkit-scrollbar {width: 5px; }
+::-webkit-scrollbar-track {border-radius: 10px;}
+
+::-webkit-scrollbar-thumb 
+{
+    background: #F6D6D4; 
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover { background: #E1F1EE;}
+
+ .container
+{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: left;
+    color: #385075;
+}
+
+.text 
+{
+    display: flex;
+    flex-direction: column;
+}
+
+h1
+{
+    font-weight: bold;
+    font-size: 40px;
+    line-height: 81px;
+}
+
+.details
+{
+    font-size: 25px;
+    width: 70%;
+}
+
+.titolo
+{
+    margin-top: 20px;
+    display: flex;
+    flex-direction: column;
+}
+
+.titolo input
+{
+    width: 50%;
+    border-radius: 5px;
+    border: 1px solid #385075;
+    padding: 6px;
+}
+
+.desc
+{
+    display: flex;
+    flex-direction: column;
+}
+
+.desc textarea
+{
+    width: 100%;
+    padding: 6px;
+}
+
+.voto
+{
+    margin-top: 40px;
+}
+
+.voto select
+{
+    background: #FFFFFF;
+    box-shadow: 0px 8px 28px -6px rgba(24, 39, 75, 0.12), 0px 18px 88px -4px rgba(24, 39, 75, 0.14);
+    border-radius: 5px;
+    font-size: 22px;
+    padding: 10px;
+    text-align: center;
+    color: #385075;
+}
+
+.voto select option
+{
+    text-align: center;
+}
+
+button
+{
+
+    padding: 17px 46px;
+    box-shadow: 0px 8px 28px -6px rgba(24, 39, 75, 0.12), 0px 18px 88px -4px rgba(24, 39, 75, 0.14);
+    border-radius: 5px;
+    color: #385075;
+    border: none;
+    font-size: 20px;
+    margin-right: -550px;
+    margin-top: -40px;
+}
+
+button:active
+{
+    background-color: #385075;
+    color: #FFFFFF;
+    border: white;
+}
