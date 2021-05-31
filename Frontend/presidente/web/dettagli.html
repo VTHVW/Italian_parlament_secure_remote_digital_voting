@@ -1,0 +1,36 @@
+<html>
+<head>
+    <link rel="stylesheet" href="css/dettagli.css">
+    <script src="eel.js"></script>
+    <title>Amministratore</title>
+</head>
+    <body>
+        <div class="container">
+            <img src="img/banner.svg" alt="none">
+            <h1>Dettagli legge</h1>
+            <div class="details">
+
+                <div class="titolo">
+                    <label for="Titolo">Titolo: </label>
+                    <input type="text" id="titolo" name="titolo"><br>
+                </div>
+                
+                <div class="desc">
+                    <label for="desc">Descrizione:</label>
+                    <textarea rows="3" cols="50"></textarea>
+                </div>
+                
+                <div class="voto">
+                    <select name="voto">
+                        <option selected disabled style="display: none;" id="voto"> — Tipo di scrutinio —</option>
+                        <option value="segreto">Palese  </option>
+                        <option value="palese">Segreto  </option>
+                    </select><br><br>
+                </div>
+            </div>
+            <button type="submit" id="continua">Continua</button>
+
+        </div>
+        
+    </body>
+</html>
