@@ -8,7 +8,7 @@ import hashlib
 
 class Votazioni():
 
-    #Count the number of ID
+    #Count the number of ID in the main list
     def count_id():
         try:
             file = open('elenco.txt', 'r')
@@ -224,7 +224,7 @@ class Votazioni():
 
             pdf = canvas.Canvas('pdf/' + str(id) + '.pdf')
             pdf.drawString(100, 700, 'Data e ora: ' + res['datetime'])
-            pdf.drawString(100, 680, 'Nome: ' + res['title'])
+            pdf.drawString(100, 680, 'Titolo: ' + res['title'])
             pdf.drawString(100, 660, 'Descrizione: ' + res['description'])
             pdf.drawString(100, 640, 'Tipo: ' + res['type'])
             pdf.drawString(100, 620, 'Di chi: ' + res['who'])
