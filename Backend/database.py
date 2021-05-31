@@ -159,7 +159,7 @@ class Votazioni():
             file.close()
 
             #Create the dictionary
-            res = {'datetime': datetime, 'name': name, 'description': desc, 'type': type, 'who': who, 'md5': hashmd5, 'sha256': hashsha256, 'yes': count0, 'no': count1, 'abstention': count2}
+            res = {'datetime': datetime, 'title': name, 'description': desc, 'type': type, 'who': who, 'md5': hashmd5, 'sha256': hashsha256, 'yes': count0, 'no': count1, 'abstention': count2}
 
             return res
 
@@ -224,7 +224,7 @@ class Votazioni():
 
             pdf = canvas.Canvas('pdf/' + str(id) + '.pdf')
             pdf.drawString(100, 700, 'Data e ora: ' + res['datetime'])
-            pdf.drawString(100, 680, 'Nome: ' + res['name'])
+            pdf.drawString(100, 680, 'Nome: ' + res['title'])
             pdf.drawString(100, 660, 'Descrizione: ' + res['description'])
             pdf.drawString(100, 640, 'Tipo: ' + res['type'])
             pdf.drawString(100, 620, 'Di chi: ' + res['who'])
