@@ -1,9 +1,10 @@
 #!/usr/bin/python3 
 
-from pathlib import Path
+from reportlab.pdfgen import canvas
 import time
 import os
 import hashlib
+
 
 class Votazioni():
 
@@ -12,7 +13,7 @@ class Votazioni():
         try:
             file = open('elenco.txt', 'r')
             count = int(file.read().count('\n'))
-            file.close
+            file.close()
             return count
 
         except Exception as e:
@@ -61,7 +62,7 @@ class Votazioni():
             return e
     
     #Add a vote to defined vote
-    def add_vote(self, vote, name, id = None):
+    def add_vote(self, vote, name = '', id = None):
         try:
             if (id == None):
                 file = open(str(self.defid) + '.txt', 'r+')
@@ -99,7 +100,7 @@ class Votazioni():
             file.close()
             os.system('chmod 444 ' + filename)
             
-            return 0
+            return 0 #secondo vale non siamo in c e non serve, ma io ho nostalgia
         
         except Exception as e:
             print('Error!')
@@ -142,15 +143,18 @@ class Votazioni():
                     count2 = count2 + 1
                 text = file.readline()
             
-            #Generate the hash from the file
+            #Generate the hashs from the file
             file.seek(0, 0)
-            md5 = hashlib.md5(file.read())
+            text = file.read()
+            md5 = hashlib.md5(text)
             hashmd5 = md5.hexdigest()
+            sha256 = hashlib.sha256(text)
+            hashsha256 = sha256.hexdigest()
 
             file.close()
 
             #Create the dictionary
-            res = {'datetime': datetime, 'name': name, 'description': desc, 'type': type, 'who': who, 'md5': hashmd5, 'yes': count0, 'no': count1, 'abstention': count2}
+            res = {'datetime': datetime, 'name': name, 'description': desc, 'type': type, 'who': who, 'md5': hashmd5, 'sha256': hashsha256, 'yes': count0, 'no': count1, 'abstention': count2}
 
             return res
 
@@ -159,6 +163,7 @@ class Votazioni():
             print('Exception message: ' + str(e))
             return e
     
+    #Return a list of vote
     def list_vote(self):
         try:
             lista = list()
@@ -196,6 +201,38 @@ class Votazioni():
             
             file.close()
             return -1
+
+        except Exception as e:
+            print('Error!')
+            print('Exception message: ' + str(e))
+            return e
+    
+    #Return a path contain a pdf
+    def pdf(self, id = None):
+        try:
+            #Obtain information abaut a vote
+            if (id == None):
+                res = self.res_vote()
+                id = self.defid
+            else:
+                res = self.res_vote(id)
+
+            pdf = canvas.Canvas(str(id) + '.pdf')
+            pdf.drawString(100, 700, 'Data e ora: ' + res['datetime'])
+            pdf.drawString(100, 680, 'Nome: ' + res['name'])
+            pdf.drawString(100, 660, 'Descrizione: ' + res['description'])
+            pdf.drawString(100, 640, 'Tipo: ' + res['type'])
+            pdf.drawString(100, 620, 'Di chi: ' + res['who'])
+            pdf.drawString(100, 600, 'Hash MD5: ' + res['md5'])
+            pdf.drawString(100, 580, 'Hash SHA256: ' + res['sha256'])
+            pdf.drawString(100, 560, 'Favorevoli: ' + res['yes'])
+            pdf.drawString(100, 540, 'Non favorevoli: ' + res['no'])
+            pdf.drawString(100, 520, 'Astenuti: ' + res['abstention'])
+            pdf.drawString(100, 500, 'ID: ' + str(id))
+            pdf.drawImage('logo.jpeg', 100, 200, 300, 240)
+            pdf.save()
+            
+            return (str(id) + '.pdf')
 
         except Exception as e:
             print('Error!')
