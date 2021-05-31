@@ -76,7 +76,12 @@ class Votazioni():
                 return 1
 
             #Writing the vote
-            text = str(vote) + '_' + name + '\n'
+            if (vote == 'favorevole'):
+                text = '0_' + name + '\n'
+            elif (vote == 'contrario'):
+                text = '1_' + name + '\n'
+            elif (vote == 'astensione'):
+                text = '2_' + name + '\n'
             file.seek(0, 2)
             file.write(text)
             file.close()
@@ -217,7 +222,7 @@ class Votazioni():
             else:
                 res = self.res_vote(id)
 
-            pdf = canvas.Canvas(str(id) + '.pdf')
+            pdf = canvas.Canvas('pdf/' + str(id) + '.pdf')
             pdf.drawString(100, 700, 'Data e ora: ' + res['datetime'])
             pdf.drawString(100, 680, 'Nome: ' + res['name'])
             pdf.drawString(100, 660, 'Descrizione: ' + res['description'])
@@ -229,7 +234,7 @@ class Votazioni():
             pdf.drawString(100, 540, 'Non favorevoli: ' + res['no'])
             pdf.drawString(100, 520, 'Astenuti: ' + res['abstention'])
             pdf.drawString(100, 500, 'ID: ' + str(id))
-            pdf.drawImage('logo.jpeg', 100, 200, 300, 240)
+            pdf.drawImage('pdf/logo.jpeg', 100, 200, 300, 240)
             pdf.save()
             
             return (str(id) + '.pdf')
