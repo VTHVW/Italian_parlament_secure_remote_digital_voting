@@ -60,34 +60,44 @@ class Votazioni():
             print('Exception message: ' + str(e))
             return e
     
-    #Add a vote to current vote
-    def add_vote(self,):
-        file = open(str(self.id) + '.txt', 'a')
+    #Add a vote to defined vote
+    def add_vote(self, vote, name, id = None):
+        try:
+            if (id == None):
+                file = open(str(self.defid) + '.txt', 'r+')
+            else:
+                file = open(str(id) + '.txt', 'r+')
 
-    #Close current vote
-    def close_vote(self):
-        try:
-            filename = str(self.defid) + '.txt'
-            file = open(filename, 'r+')
-            file.write('0')
+            #Verify that the vote is open
+            read = file.readline()
+            if (int(read[1]) == 1):
+                print('Votazione ancora in corso')
+                return 1
+
+            #Writing the vote
+            text = str(vote) + '_' + name + '\n'
+            file.seek(0, 2)
+            file.write(text)
             file.close()
-            os.system('chmod 444' + filename)
-            
+
             return 0
-        
+
         except Exception as e:
             print('Error!')
             print('Exception message: ' + str(e))
             return e
-    
+
     #Close vote
-    def close_vote(self, id):
+    def close_vote(self, id = None):
         try:
-            filename = str(id) + '.txt'
+            if (id == None):
+                filename = str(self.defid) + '.txt'
+            else:
+                filename = str(id) + '.txt'
             file = open(filename, 'r+')
             file.write('0')
             file.close()
-            os.system('chmod 444' + filename)
+            os.system('chmod 444 ' + filename)
             
             return 0
         
@@ -96,11 +106,15 @@ class Votazioni():
             print('Exception message: ' + str(e))
             return e
     
-    #Return a dictionary with the result of the default vote
-    def res_vote(self):
+    #Return a dictionary with the result of a vote
+    def res_vote(self, id = None):
         try:
             #Open file and verify that the vote is closed
-            file = open(str(id) + '.txt', 'r')
+            if (id == None):
+                file = open(str(self.defid) + '.txt', 'r')
+            else:
+                file = open(str(id) + '.txt', 'r')
+            
             if (int(file.readline()) == 0):
                 print('Votazione ancora in corso')
                 return 1
@@ -126,13 +140,62 @@ class Votazioni():
                     count1 = count1 + 1
                 elif (int(text[0]) == 2):
                     count2 = count2 + 1
+                text = file.readline()
             
             #Generate the hash from the file
             file.seek(0, 0)
             md5 = hashlib.md5(file.read())
-            hash = md5.hexdigest()
+            hashmd5 = md5.hexdigest()
 
             file.close()
+
+            #Create the dictionary
+            res = {'datetime': datetime, 'name': name, 'description': desc, 'type': type, 'who': who, 'md5': hashmd5, 'yes': count0, 'no': count1, 'abstention': count2}
+
+            return res
+
+        except Exception as e:
+            print('Error!')
+            print('Exception message: ' + str(e))
+            return e
+    
+    def list_vote(self):
+        try:
+            lista = list()
+            file = open('elenco.txt', 'r')
+
+            #Read file and split the line
+            text = file.readline()
+            while (text != ''):
+                splitted = text.split('_')
+                lista.append({'id': splitted[0], 'name': splitted[1], 'datetime': splitted[2]})
+                text = file.readline()
+            
+            file.close()
+            return lista
+        
+        except Exception as e:
+            print('Error!')
+            print('Exception message: ' + str(e))
+            return e
+
+    #Find the vote of a user in a defined vote
+    def find_vote(self, name, id = None):
+        try:
+            if (id == None):
+                file = open(str(self.defid) + '.txt', 'r')
+            else:
+                file = open(id + '.txt', 'r')
+            text = file.readline()
+            while (text != ''):
+                splitted = text.split('_')
+                if (text[1] == name):
+                    file.close()
+                    return splitted[0]
+                text = file.readline()
+            
+            file.close()
+            return -1
 
         except Exception as e:
             print('Error!')
